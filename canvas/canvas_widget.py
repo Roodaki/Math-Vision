@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QWidget
 from PyQt5.QtGui import QPainter, QImage, QPen, QColor
 from PyQt5.QtCore import Qt, QPoint, QSize, QRect
+from PyQt5.QtWidgets import QWidget
 
 class CanvasWidget(QWidget):
     def __init__(self, parent=None):
@@ -60,3 +60,9 @@ class CanvasWidget(QWidget):
         painter = QPainter(new_image)
         painter.drawImage(QPoint(0, 0), image)
         self.image = new_image
+
+    def set_pen_color(self, color):
+        self.pen_color = color
+
+    def set_pen_width(self, width):
+        self.pen_width = width
