@@ -13,6 +13,9 @@ class CanvasWidget(QWidget):
         self.pen_color = QColor(Qt.black)
         self.pen_width = 5
 
+        self.undo_stack = []
+        self.redo_stack = []
+
     def paintEvent(self, event):
         canvas_painter = QPainter(self)
         canvas_painter.drawImage(self.rect(), self.image, self.image.rect())
@@ -39,6 +42,7 @@ class CanvasWidget(QWidget):
         if event.button() == Qt.LeftButton:
             self.draw_line_to(event.pos())
             self.drawing = False
+            self.save_snapshot()
 
     def draw_line_to(self, end_point):
         painter = QPainter(self.image)
@@ -66,3 +70,22 @@ class CanvasWidget(QWidget):
 
     def set_pen_width(self, width):
         self.pen_width = width
+
+    def undo(self):
+        if len(self.undo_stack) > 0:
+            last_change = self.undo_stack.pop()
+            self.redo_stack.append(self.image.copy())
+            self.image = last_change
+            self.update()
+
+    def redo(self):
+        if len(self.redo_stack) > 0:
+            last_change = self.redo_stack.pop()
+            self.undo_stack.append(self.image.copy())
+            self.image = last_change
+            self.update()
+
+    def save_snapshot(self):
+        self.undo_stack.append(self.image.copy())
+        self.redo_stack = []
+
