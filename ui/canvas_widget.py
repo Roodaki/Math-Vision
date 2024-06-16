@@ -1,9 +1,12 @@
 from PyQt5.QtGui import QPainter, QImage, QPen, QColor
 from PyQt5.QtCore import Qt, QPoint, QSize, QRect
 from PyQt5.QtWidgets import QWidget
+from PIL import Image
+import numpy as np
+
 
 class CanvasWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, class_names, parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WA_StaticContents)
         self.image = QImage(self.size(), QImage.Format_RGB32)
@@ -15,6 +18,8 @@ class CanvasWidget(QWidget):
 
         self.undo_stack = []
         self.redo_stack = []
+
+        self.class_names = class_names  # Store class_names
 
     def paintEvent(self, event):
         canvas_painter = QPainter(self)
@@ -46,9 +51,17 @@ class CanvasWidget(QWidget):
 
     def draw_line_to(self, end_point):
         painter = QPainter(self.image)
-        painter.setPen(QPen(self.pen_color, self.pen_width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        painter.setPen(
+            QPen(
+                self.pen_color, self.pen_width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin
+            )
+        )
         painter.drawLine(self.last_point, end_point)
-        self.update(QRect(self.last_point, end_point).normalized().adjusted(-self.pen_width, -self.pen_width, self.pen_width, self.pen_width))
+        self.update(
+            QRect(self.last_point, end_point)
+            .normalized()
+            .adjusted(-self.pen_width, -self.pen_width, self.pen_width, self.pen_width)
+        )
         self.last_point = QPoint(end_point)
 
     def clear_canvas(self):
@@ -89,3 +102,5 @@ class CanvasWidget(QWidget):
         self.undo_stack.append(self.image.copy())
         self.redo_stack = []
 
+    def get_drawing(self):
+        return self.image
