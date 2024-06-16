@@ -1,13 +1,15 @@
 from PyQt5.QtGui import QPainter, QImage, QPen, QColor
-from PyQt5.QtCore import Qt, QPoint, QSize, QRect
+from PyQt5.QtCore import Qt, QPoint, QRect, QSize
 from PyQt5.QtWidgets import QWidget
-from PIL import Image
-import numpy as np
 
 
 class CanvasWidget(QWidget):
     def __init__(self, class_names, parent=None):
         super().__init__(parent)
+        self.initUI()
+        self.class_names = class_names
+
+    def initUI(self):
         self.setAttribute(Qt.WA_StaticContents)
         self.image = QImage(self.size(), QImage.Format_RGB32)
         self.image.fill(Qt.white)
@@ -15,11 +17,8 @@ class CanvasWidget(QWidget):
         self.last_point = QPoint()
         self.pen_color = QColor(Qt.black)
         self.pen_width = 5
-
         self.undo_stack = []
         self.redo_stack = []
-
-        self.class_names = class_names  # Store class_names
 
     def paintEvent(self, event):
         canvas_painter = QPainter(self)
@@ -31,7 +30,6 @@ class CanvasWidget(QWidget):
             new_height = max(self.height(), self.image.height())
             self.resize_image(self.image, QSize(new_width, new_height))
             self.update()
-
         super().resizeEvent(event)
 
     def mousePressEvent(self, event):
@@ -71,7 +69,6 @@ class CanvasWidget(QWidget):
     def resize_image(self, image, new_size):
         if image.size() == new_size:
             return
-
         new_image = QImage(new_size, QImage.Format_RGB32)
         new_image.fill(Qt.white)
         painter = QPainter(new_image)

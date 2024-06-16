@@ -1,0 +1,54 @@
+/* General styling for all widgets */
+QWidget {
+    background-color: #f0f0f0;
+}
+
+/* Styling for QPushButton */
+QPushButton {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 14px;
+    margin: 4px 2px;
+    border-radius: 8px;
+}
+
+QPushButton:hover {
+    background-color: #45a049;
+}
+
+/* Styling for QPushButton when disabled */
+QPushButton:disabled {
+    background-color: #cccccc;
+    color: #666666;
+}
+
+/* Styling for QMessageBox */
+QMessageBox {
+    background-color: white;
+    border: 2px solid #4CAF50;
+}
+
+QMessageBox QPushButton {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 14px;
+    margin: 4px 2px;
+    border-radius: 8px;
+}
+
+QMessageBox QPushButton:hover {
+    background-color: #45a049;
+}
+
+QMessageBox QLabel {
+    color: #333333;
+    font-size: 14px;
+}

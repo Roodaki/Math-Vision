@@ -1,126 +1,130 @@
+import sys
 import numpy as np
+from PIL import Image
 from tensorflow.keras.models import load_model
-from tensorflow.keras.layers import Softmax
 from PyQt5.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
     QWidget,
     QPushButton,
-    QColorDialog,
     QInputDialog,
     QHBoxLayout,
     QMessageBox,
 )
-from PyQt5.QtGui import QColor, QImage, QPainter, QPen
-from PyQt5.QtCore import Qt, QPoint, QRect, QSize
+from PyQt5.QtCore import Qt, QFile
 from ui.canvas_widget import CanvasWidget
-from PIL import Image
+from utils.data_processing import preprocess_image
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Professional Paint App")
         self.setGeometry(100, 100, 800, 600)
+        self.initUI()
 
+    def initUI(self):
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
 
+        self.setupLayout()
+        self.loadClassNames()
+        self.setupCanvas()
+        self.setupButtons()
+        self.loadStylesheet()
+
+    def setupLayout(self):
         self.layout = QVBoxLayout(self.central_widget)
 
-        # Load preprocessed data and determine input shape and number of classes
-        data_path = "data/processed_data/math_notation_dataset.npz"
-        data = np.load(data_path, allow_pickle=True)
+    def loadClassNames(self):
+        data = np.load(
+            "data/processed_data/math_notation_dataset.npz", allow_pickle=True
+        )
         self.class_names = data["class_names"]
 
-        self.canvas = CanvasWidget(self)
+    def setupCanvas(self):
+        self.canvas = CanvasWidget(self.class_names, self)
         self.layout.addWidget(self.canvas)
 
+    def setupButtons(self):
         button_layout = QHBoxLayout()
 
-        self.clear_button = QPushButton("Clear")
-        self.clear_button.clicked.connect(self.canvas.clear_canvas)
-        button_layout.addWidget(self.clear_button)
-
-        self.color_button = QPushButton("Select Color")
-        self.color_button.clicked.connect(self.show_color_dialog)
-        button_layout.addWidget(self.color_button)
-
-        self.brush_size_button = QPushButton("Brush Size")
-        self.brush_size_button.clicked.connect(self.show_brush_size_dialog)
-        button_layout.addWidget(self.brush_size_button)
-
-        self.undo_button = QPushButton("Undo")
-        self.undo_button.clicked.connect(self.canvas.undo)
-        button_layout.addWidget(self.undo_button)
-
-        self.redo_button = QPushButton("Redo")
-        self.redo_button.clicked.connect(self.canvas.redo)
-        button_layout.addWidget(self.redo_button)
-
-        self.predict_button = QPushButton("Predict")
-        self.predict_button.clicked.connect(
-            self.predict_drawing
-        )  # Connect to predict method
-        button_layout.addWidget(self.predict_button)  # Add predict button
+        self.setupButton("Clear", self.canvas.clear_canvas, button_layout)
+        self.setupButton("Brush Size", self.showBrushSizeDialog, button_layout)
+        self.setupButton("Undo", self.canvas.undo, button_layout)
+        self.setupButton("Redo", self.canvas.redo, button_layout)
+        self.setupButton("Predict", self.predictDrawing, button_layout)
 
         self.layout.addLayout(button_layout)
 
-    def show_color_dialog(self):
-        color = QColorDialog.getColor(initial=self.canvas.pen_color)
-        if color.isValid():
-            self.canvas.set_pen_color(color)
+    def setupButton(self, text, on_clicked, layout):
+        button = QPushButton(text)
+        button.clicked.connect(on_clicked)
+        layout.addWidget(button)
 
-    def show_brush_size_dialog(self):
+    def showBrushSizeDialog(self):
         size, ok = QInputDialog.getInt(
             self, "Select Brush Size", "Size:", self.canvas.pen_width, 1, 50, 1
         )
         if ok:
             self.canvas.set_pen_width(size)
 
-    def predict_drawing(self):
-        # Get the drawing from the canvas
+    def loadStylesheet(self):
+        style_file = QFile("ui/resources/styles/stylesheet.qss")
+        style_file.open(QFile.ReadOnly | QFile.Text)
+        stylesheet = bytes(style_file.readAll()).decode("utf-8")
+        self.setStyleSheet(stylesheet)
+
+    def predictDrawing(self):
         drawing = self.canvas.get_drawing()
 
         if drawing is not None:
-            # Convert QImage to PIL.Image and then to RGB
-            img = self.qimage_to_pil(drawing).convert("RGB")
-
-            # Resize image to model input size (45x45) and normalize
+            img = self.qimageToPil(drawing).convert("RGB")
             img_resized = img.resize((45, 45))
-            img_array = np.array(img_resized) / 255.0
+            img_array = preprocess_image(img_resized)
 
-            # Expand dimensions to match the model's expected input shape
-            img_input = np.expand_dims(img_array, axis=0)
-
-            # Load the trained model
             model = load_model("models/saved_models/trained_model.h5")
-
-            # Perform prediction
-            prediction = model.predict(img_input)
-
-            # Get the predicted class index
+            prediction = model.predict(img_array)
             class_index = np.argmax(prediction)
 
-            # Check if the predicted index is valid
             if class_index < len(self.class_names):
                 class_name = self.class_names[class_index]
-                confidence = prediction[0, class_index]
-                QMessageBox.information(
-                    self,
-                    "Prediction",
-                    f"Predicted class: {class_name}\nAccuracy: {confidence:.2%}",
-                )
+                confidence = prediction[0, class_index] * 100
+
+                if confidence >= 60:
+                    if confidence >= 90:
+                        confidence_color = "green"
+                    elif confidence >= 80:
+                        confidence_color = "yellow"
+                    else:
+                        confidence_color = "red"
+
+                    # Create the message with styled HTML text for prediction
+                    message = f"<p><b>Predicted Class:</b> {class_name}</p>"
+                    message += f"<p><b>Accuracy:</b> <font color='{confidence_color}'>{confidence:.2f}%</font></p>"
+
+                    # Create QMessageBox with HTML content
+                    msg_box = QMessageBox()
+                    msg_box.setWindowTitle("Prediction")
+                    msg_box.setTextFormat(Qt.RichText)
+                    msg_box.setText(message)
+                    msg_box.exec_()
+                else:
+                    # Low confidence warning message
+                    warning_message = "The prediction confidence is too low to make a reliable prediction."
+
+                    # Create QMessageBox for low confidence warning
+                    msg_box = QMessageBox()
+                    msg_box.setWindowTitle("Low Confidence Warning")
+                    msg_box.setIcon(QMessageBox.Warning)
+                    msg_box.setText(warning_message)
+                    msg_box.setStandardButtons(QMessageBox.Ok)
+                    msg_box.exec_()
             else:
                 QMessageBox.warning(self, "Prediction", "Invalid class index")
 
-    def qimage_to_pil(self, qimage):
-        # Convert QImage to numpy array
+    def qimageToPil(self, qimage):
         width, height = qimage.width(), qimage.height()
         image_data = qimage.bits().asstring(width * height * 4)
         image = np.frombuffer(image_data, dtype=np.uint8).reshape((height, width, 4))
-
-        # Convert RGBA image to PIL Image
         image_pil = Image.fromarray(image)
-
         return image_pil

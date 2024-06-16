@@ -1,5 +1,3 @@
-# models/train_model.py
-
 import numpy as np
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from tensorflow.keras.optimizers import Adam

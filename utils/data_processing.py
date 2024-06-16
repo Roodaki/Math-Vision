@@ -1,12 +1,9 @@
-# data_processing.py
-
 import os
 import cv2
 import numpy as np
 from sklearn.model_selection import train_test_split
 
 
-# Function to load images from a directory
 def load_images_from_folder(folder):
     images = []
     labels = []
@@ -24,6 +21,13 @@ def load_images_from_folder(folder):
                 labels.append(idx)  # Assign label based on class index
 
     return images, labels, class_names
+
+
+def preprocess_image(img):
+    # Resize image to model input size (45x45) and normalize
+    img_array = np.array(img.resize((45, 45))) / 255.0
+    img_input = np.expand_dims(img_array, axis=0)
+    return img_input
 
 
 def preprocess_dataset(dataset_folder, save_path):
