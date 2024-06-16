@@ -5,6 +5,18 @@ from sklearn.model_selection import train_test_split
 
 
 def load_images_from_folder(folder):
+    """
+    Load images and their corresponding labels from a folder structure where each subfolder represents a class.
+
+    Args:
+        folder (str): Path to the root folder containing subfolders of class images.
+
+    Returns:
+        tuple: A tuple containing:
+            - images (list): List of loaded images.
+            - labels (list): List of labels corresponding to each image.
+            - class_names (list): List of class names (subfolder names).
+    """
     images = []
     labels = []
     class_names = sorted(
@@ -24,6 +36,15 @@ def load_images_from_folder(folder):
 
 
 def preprocess_image(img):
+    """
+    Preprocess a single image by resizing and normalizing it.
+
+    Args:
+        img (PIL.Image): Input image.
+
+    Returns:
+        np.ndarray: Preprocessed image as a numpy array.
+    """
     # Resize image to model input size (45x45) and normalize
     img_array = np.array(img.resize((45, 45))) / 255.0
     img_input = np.expand_dims(img_array, axis=0)
@@ -31,7 +52,18 @@ def preprocess_image(img):
 
 
 def preprocess_dataset(dataset_folder, save_path):
-    # Load images
+    """
+    Preprocess a dataset of images, split them into training, development (validation), and test sets,
+    and save the processed data.
+
+    Args:
+        dataset_folder (str): Path to the folder containing the dataset.
+        save_path (str): Path to save the preprocessed data.
+
+    Returns:
+        None
+    """
+    # Load images and labels from dataset folder
     images, labels, class_names = load_images_from_folder(dataset_folder)
 
     # Convert lists to numpy arrays for easier manipulation

@@ -1,54 +1,54 @@
 /* General styling for all widgets */
 QWidget {
-    background-color: #f0f0f0;
+    background-color: #f0f0f0;  /* Light gray background */
 }
 
 /* Styling for QPushButton */
 QPushButton {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px;
-    text-align: center;
-    text-decoration: none;
-    font-size: 14px;
-    margin: 4px 2px;
-    border-radius: 8px;
+    background-color: #4CAF50;  /* Green background */
+    color: white;               /* White text color */
+    border: none;               /* No border */
+    padding: 10px;              /* Padding around the text */
+    text-align: center;         /* Center-aligned text */
+    text-decoration: none;      /* No underline */
+    font-size: 14px;            /* Font size */
+    margin: 4px 2px;            /* Margin */
+    border-radius: 8px;         /* Rounded corners */
 }
 
 QPushButton:hover {
-    background-color: #45a049;
+    background-color: #45a049;  /* Darker green background on hover */
 }
 
 /* Styling for QPushButton when disabled */
 QPushButton:disabled {
-    background-color: #cccccc;
-    color: #666666;
+    background-color: #cccccc;  /* Light gray background when disabled */
+    color: #666666;             /* Gray text color */
 }
 
 /* Styling for QMessageBox */
 QMessageBox {
-    background-color: white;
-    border: 2px solid #4CAF50;
+    background-color: white;        /* White background */
+    border: 2px solid #4CAF50;      /* Green border */
 }
 
 QMessageBox QPushButton {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px;
-    text-align: center;
-    text-decoration: none;
-    font-size: 14px;
-    margin: 4px 2px;
-    border-radius: 8px;
+    background-color: #4CAF50;      /* Green background */
+    color: white;                   /* White text color */
+    border: none;                   /* No border */
+    padding: 10px;                  /* Padding around the text */
+    text-align: center;             /* Center-aligned text */
+    text-decoration: none;          /* No underline */
+    font-size: 14px;                /* Font size */
+    margin: 4px 2px;                /* Margin */
+    border-radius: 8px;             /* Rounded corners */
 }
 
 QMessageBox QPushButton:hover {
-    background-color: #45a049;
+    background-color: #45a049;      /* Darker green background on hover */
 }
 
 QMessageBox QLabel {
-    color: #333333;
-    font-size: 14px;
+    color: #333333;                 /* Dark gray text color */
+    font-size: 14px;                /* Font size */
 }

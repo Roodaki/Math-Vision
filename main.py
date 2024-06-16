@@ -4,9 +4,16 @@ from ui.main_window import MainWindow
 
 
 def main():
+    # Create the application instance
     app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
+
+    # Create the main window
+    main_window = MainWindow()
+
+    # Show the main window
+    main_window.show()
+
+    # Start the application event loop
     sys.exit(app.exec_())
 
 

@@ -7,6 +7,16 @@ from tensorflow.keras.models import Model, save_model
 
 
 def load_preprocessed_data(data_path):
+    """
+    Load preprocessed dataset from the given file path.
+
+    Args:
+    - data_path (str): Path to the preprocessed data file.
+
+    Returns:
+    - Tuple of numpy arrays and variables:
+      (X_train, y_train, X_dev, y_dev, X_test, y_test, class_names, input_shape, num_classes)
+    """
     # Load the preprocessed dataset
     data = np.load(data_path, allow_pickle=True)
 
@@ -35,6 +45,16 @@ def load_preprocessed_data(data_path):
 
 
 def build_model(input_shape, num_classes):
+    """
+    Build a convolutional neural network model based on VGG16 architecture.
+
+    Args:
+    - input_shape (tuple): Shape of the input data (excluding batch dimension).
+    - num_classes (int): Number of output classes.
+
+    Returns:
+    - TensorFlow Keras Model: Compiled CNN model.
+    """
     # Load pre-trained VGG16 model, exclude top layers
     base_model = VGG16(
         weights="imagenet",
@@ -59,6 +79,22 @@ def build_model(input_shape, num_classes):
 
 
 def train_model(model, X_train, y_train, X_dev, y_dev, batch_size=32, epochs=20):
+    """
+    Train the convolutional neural network model.
+
+    Args:
+    - model (TensorFlow Keras Model): Compiled CNN model to train.
+    - X_train (numpy.ndarray): Training data.
+    - y_train (numpy.ndarray): Training labels.
+    - X_dev (numpy.ndarray): Validation data.
+    - y_dev (numpy.ndarray): Validation labels.
+    - batch_size (int): Batch size for training.
+    - epochs (int): Number of epochs for training.
+
+    Returns:
+    - Tuple of TensorFlow Keras Model and History:
+      (Trained model, Training history)
+    """
     # Compile the model
     model.compile(
         optimizer=Adam(learning_rate=0.001),
@@ -68,7 +104,7 @@ def train_model(model, X_train, y_train, X_dev, y_dev, batch_size=32, epochs=20)
 
     # Callbacks
     checkpoint_callback = ModelCheckpoint(
-        "models/saved_models/model_weights.weights.h5",  # Corrected filepath
+        "models/saved_models/model_weights.weights.h5",
         save_best_only=True,
         save_weights_only=True,
         monitor="val_loss",
@@ -97,6 +133,14 @@ def train_model(model, X_train, y_train, X_dev, y_dev, batch_size=32, epochs=20)
 
 
 def evaluate_model(model, X_test, y_test):
+    """
+    Evaluate the convolutional neural network model on the test set.
+
+    Args:
+    - model (TensorFlow Keras Model): Trained CNN model.
+    - X_test (numpy.ndarray): Test data.
+    - y_test (numpy.ndarray): Test labels.
+    """
     # Evaluate the model
     loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
     print(f"Test loss: {loss:.4f}")
@@ -104,12 +148,22 @@ def evaluate_model(model, X_test, y_test):
 
 
 def save_trained_model(model, model_path):
+    """
+    Save the trained convolutional neural network model.
+
+    Args:
+    - model (TensorFlow Keras Model): Trained CNN model.
+    - model_path (str): File path to save the trained model.
+    """
     # Save the trained model
     save_model(model, model_path)
     print(f"Trained model saved to {model_path}")
 
 
 def main():
+    """
+    Main function to load data, build, train, evaluate, and save the CNN model.
+    """
     # Constants
     data_path = "data/processed_data/math_notation_dataset.npz"
     trained_model_path = "models/saved_models/trained_model.h5"

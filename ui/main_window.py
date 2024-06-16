@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from PIL import Image
 from tensorflow.keras.models import load_model
@@ -23,6 +22,7 @@ class MainWindow(QMainWindow):
         self.initUI()
 
     def initUI(self):
+        """Initialize the user interface."""
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
 
@@ -33,19 +33,23 @@ class MainWindow(QMainWindow):
         self.loadStylesheet()
 
     def setupLayout(self):
+        """Setup the main layout."""
         self.layout = QVBoxLayout(self.central_widget)
 
     def loadClassNames(self):
+        """Load class names from processed dataset."""
         data = np.load(
             "data/processed_data/math_notation_dataset.npz", allow_pickle=True
         )
         self.class_names = data["class_names"]
 
     def setupCanvas(self):
+        """Setup the drawing canvas."""
         self.canvas = CanvasWidget(self.class_names, self)
         self.layout.addWidget(self.canvas)
 
     def setupButtons(self):
+        """Setup the buttons for canvas interaction."""
         button_layout = QHBoxLayout()
 
         self.setupButton("Clear", self.canvas.clear_canvas, button_layout)
@@ -57,11 +61,13 @@ class MainWindow(QMainWindow):
         self.layout.addLayout(button_layout)
 
     def setupButton(self, text, on_clicked, layout):
+        """Setup a button with the given text, clicked function, and layout."""
         button = QPushButton(text)
         button.clicked.connect(on_clicked)
         layout.addWidget(button)
 
     def showBrushSizeDialog(self):
+        """Show dialog to set the brush size."""
         size, ok = QInputDialog.getInt(
             self, "Select Brush Size", "Size:", self.canvas.pen_width, 1, 50, 1
         )
@@ -69,12 +75,14 @@ class MainWindow(QMainWindow):
             self.canvas.set_pen_width(size)
 
     def loadStylesheet(self):
+        """Load and apply the stylesheet to the main window."""
         style_file = QFile("ui/resources/styles/stylesheet.qss")
         style_file.open(QFile.ReadOnly | QFile.Text)
         stylesheet = bytes(style_file.readAll()).decode("utf-8")
         self.setStyleSheet(stylesheet)
 
     def predictDrawing(self):
+        """Predict the drawing on the canvas."""
         drawing = self.canvas.get_drawing()
 
         if drawing is not None:
@@ -123,6 +131,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Prediction", "Invalid class index")
 
     def qimageToPil(self, qimage):
+        """Convert QImage to PIL Image."""
         width, height = qimage.width(), qimage.height()
         image_data = qimage.bits().asstring(width * height * 4)
         image = np.frombuffer(image_data, dtype=np.uint8).reshape((height, width, 4))
