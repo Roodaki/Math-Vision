@@ -119,8 +119,8 @@ pyqt5.pyi
 .DS_Store
 Thumbs.db
 
-# Ignore dataset
-data/dataset/
-
 # Ignore __pycache__ folders in different directories
 **/__pycache__/
+
+# Ignore the data folder
+data/

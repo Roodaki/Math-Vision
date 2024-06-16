@@ -38,13 +38,14 @@ def preprocess_dataset(dataset_folder, save_path):
     print(f"Number of labels loaded: {len(labels)}")
     print(f"Class names: {class_names}")
 
+    # Convert grayscale images to RGB
+    images_rgb = np.repeat(images[..., np.newaxis], 3, -1)
+
     # Normalize images to range [0, 1]
-    normalized_images = images / 255.0
+    normalized_images = images_rgb / 255.0
 
     # Reshape images for model input (if necessary)
-    # For grayscale images, reshape to add channel dimension
-    # For example, from (height, width) to (height, width, 1)
-    reshaped_images = normalized_images.reshape(-1, images.shape[1], images.shape[2], 1)
+    reshaped_images = normalized_images.reshape(-1, images.shape[1], images.shape[2], 3)
 
     print(f"Shape of reshaped images: {reshaped_images.shape}")
 

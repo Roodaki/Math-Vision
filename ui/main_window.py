@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QPushButton, QColorDialog, QInputDialog, QHBoxLayout, QGridLayout
 from PyQt5.QtGui import QColor
-from canvas.canvas_widget import CanvasWidget
+from ui.canvas_widget import CanvasWidget
 
 class MainWindow(QMainWindow):
     def __init__(self):
