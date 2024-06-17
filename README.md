@@ -2,6 +2,11 @@
   <h1><strong>Math Vision:<br>Computer Vision for Handwritten Mathematical Notation Recognition</strong></h1>
 </div>
 
+<div align="center">
+  
+  https://github.com/Roodaki/Math-Vision/assets/89901590/c1929d1b-8961-40ca-9830-9833e5008c94
+</div>
+
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
