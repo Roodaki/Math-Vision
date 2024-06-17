@@ -1,0 +1,6 @@
+numpy
+tensorflow
+pillow
+opencv-python
+scikit-learn
+PyQt5
