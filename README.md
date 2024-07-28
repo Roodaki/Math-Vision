@@ -31,9 +31,10 @@ Math Vision is an advanced application that utilizes computer vision techniques 
    - The application loads, normalizes and splits images into training, development, and test sets. Preprocessed data is saved to a compressed .npz file for training or fine-tuning a CNN model.
 3. `Transfer Learning with VGG16`: Model training leverages transfer learning with VGG16, a convolutional neural network model pre-trained on ImageNet. The model is fine-tuned using the pre-processed dataset to recognize mathematical symbols and expressions. Trained model weights and the entire model are saved in the h5 format for future use.
 4. `Fast Prediction`: The application swiftly predicts the corresponding math symbols by processing the drawn handwriting on the canvas through the fine-tuned CNN. The accuracy of each prediction is displayed with colored text: green for predictions with accuracy above 90%, yellow for accuracy above 80%, and red for accuracy above 60%.
-5. `User-friendly Interface`: The GUI is meticulously crafted to be intuitive and user-friendly, featuring clear button labels, a well-organized layout, and intuitive navigation, providing easy interaction with the application's various features.
-6. `Modular and Extensible`: The codebase is structured in a modular way, allowing for easy extension and integration of new features. New functionalities can be added without significant modifications to existing code.
-7. `Well-documented Code`: The codebase is thoroughly documented, with detailed comments explaining the functionality of each module, method, and class. This makes it easier for developers to understand and maintain the code.
+5. `Dynamic Bounding Box`: The canvas dynamically draws a bounding box around the drawn symbol with padding, enhancing the visual feedback for users.
+6. `User-friendly Interface`: The GUI is meticulously crafted to be intuitive and user-friendly, featuring clear button labels, a well-organized layout, and intuitive navigation, providing easy interaction with the application's various features.
+7. `Modular and Extensible`: The codebase is structured in a modular way, allowing for easy extension and integration of new features. New functionalities can be added without significant modifications to existing code.
+8. `Well-documented Code`: The codebase is thoroughly documented, with detailed comments explaining the functionality of each module, method, and class. This makes it easier for developers to understand and maintain the code.
 
 ## Project Structure
 
@@ -62,8 +63,10 @@ math-notation-recognition-app/
 │   └── main_window.py                 # Main application window.
 │
 ├── utils/
+│   ├── bounding_box.py                # Utility functions for calculating bounding boxes.
 │   ├── data_processing.py             # Module for loading, preprocessing, and splitting image data.
-│   └── image_utils.py                 # Utility functions for image processing.
+│   ├── constants.py                   # File for storing constant values.
+│   └── image_processing_utils.py      # Utility functions for image processing.
 │
 ├── main.py                            # Main script file responsible for initializing the application and setting up the main window.
 ├── .gitignore                         # Specifies which files and directories should be ignored by Git version control.
