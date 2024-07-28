@@ -1,4 +1,3 @@
-# canvas_widget.py
 from PyQt5.QtGui import QPainter, QImage, QPen, QColor
 from PyQt5.QtCore import Qt, QPoint, QRect, QSize
 from PyQt5.QtWidgets import QWidget

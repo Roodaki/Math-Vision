@@ -45,6 +45,8 @@ def preprocess_image(img):
     Returns:
         np.ndarray: Preprocessed image as a numpy array.
     """
+    # Convert image to RGB if it's not already
+    img = img.convert("RGB")
     # Resize image to model input size (45x45) and normalize
     img_array = np.array(img.resize((45, 45))) / 255.0
     img_input = np.expand_dims(img_array, axis=0)

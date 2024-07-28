@@ -9,10 +9,13 @@ from PyQt5.QtWidgets import (
     QInputDialog,
     QHBoxLayout,
     QMessageBox,
+    QLabel,
 )
 from PyQt5.QtCore import Qt, QFile
+from PyQt5.QtGui import QPixmap, QImage
 from ui.canvas_widget import CanvasWidget
 from utils.data_processing import preprocess_image
+from utils.image_utils import crop_bounding_box
 
 
 class MainWindow(QMainWindow):
@@ -86,49 +89,66 @@ class MainWindow(QMainWindow):
         drawing = self.canvas.get_drawing()
 
         if drawing is not None:
-            img = self.qimageToPil(drawing).convert("RGB")
-            img_resized = img.resize((45, 45))
-            img_array = preprocess_image(img_resized)
+            bounding_box = self.canvas.bounding_box
+            if bounding_box:
+                cropped_img = crop_bounding_box(drawing, bounding_box)
+                img_resized = cropped_img.resize((45, 45))
+                img_array = preprocess_image(img_resized)
 
-            model = load_model("models/saved_models/trained_model.h5")
-            prediction = model.predict(img_array)
-            class_index = np.argmax(prediction)
+                model = load_model("models/saved_models/trained_model.h5")
+                prediction = model.predict(img_array)
+                class_index = np.argmax(prediction)
 
-            if class_index < len(self.class_names):
-                class_name = self.class_names[class_index]
-                confidence = prediction[0, class_index] * 100
+                if class_index < len(self.class_names):
+                    class_name = self.class_names[class_index]
+                    confidence = prediction[0, class_index] * 100
 
-                if confidence >= 60:
-                    if confidence >= 90:
-                        confidence_color = "green"
-                    elif confidence >= 80:
-                        confidence_color = "yellow"
+                    if confidence >= 60:
+                        if confidence >= 90:
+                            confidence_color = "green"
+                        elif confidence >= 80:
+                            confidence_color = "yellow"
+                        else:
+                            confidence_color = "red"
+
+                        # Convert cropped image to QImage
+                        cropped_img_qt = self.pilToQImage(cropped_img)
+                        pixmap = QPixmap.fromImage(cropped_img_qt)
+
+                        # Create QLabel to display the cropped image
+                        image_label = QLabel()
+                        image_label.setPixmap(pixmap)
+                        image_label.setAlignment(Qt.AlignCenter)
+
+                        # Create the message with styled HTML text for prediction
+                        message = f"<p><b>Predicted Class:</b> {class_name}</p>"
+                        message += f"<p><b>Accuracy:</b> <font color='{confidence_color}'>{confidence:.2f}%</font></p>"
+
+                        # Create QMessageBox with HTML content
+                        msg_box = QMessageBox()
+                        msg_box.setWindowTitle("Prediction")
+                        msg_box.setTextFormat(Qt.RichText)
+                        msg_box.setText(message)
+
+                        # Set the custom content of the QMessageBox
+                        msg_box.layout().addWidget(
+                            image_label, 0, 0, Qt.AlignTop | Qt.AlignHCenter
+                        )
+
+                        msg_box.exec_()
                     else:
-                        confidence_color = "red"
+                        # Low confidence warning message
+                        warning_message = "The prediction confidence is too low to make a reliable prediction."
 
-                    # Create the message with styled HTML text for prediction
-                    message = f"<p><b>Predicted Class:</b> {class_name}</p>"
-                    message += f"<p><b>Accuracy:</b> <font color='{confidence_color}'>{confidence:.2f}%</font></p>"
-
-                    # Create QMessageBox with HTML content
-                    msg_box = QMessageBox()
-                    msg_box.setWindowTitle("Prediction")
-                    msg_box.setTextFormat(Qt.RichText)
-                    msg_box.setText(message)
-                    msg_box.exec_()
+                        # Create QMessageBox for low confidence warning
+                        msg_box = QMessageBox()
+                        msg_box.setWindowTitle("Low Confidence Warning")
+                        msg_box.setIcon(QMessageBox.Warning)
+                        msg_box.setText(warning_message)
+                        msg_box.setStandardButtons(QMessageBox.Ok)
+                        msg_box.exec_()
                 else:
-                    # Low confidence warning message
-                    warning_message = "The prediction confidence is too low to make a reliable prediction."
-
-                    # Create QMessageBox for low confidence warning
-                    msg_box = QMessageBox()
-                    msg_box.setWindowTitle("Low Confidence Warning")
-                    msg_box.setIcon(QMessageBox.Warning)
-                    msg_box.setText(warning_message)
-                    msg_box.setStandardButtons(QMessageBox.Ok)
-                    msg_box.exec_()
-            else:
-                QMessageBox.warning(self, "Prediction", "Invalid class index")
+                    QMessageBox.warning(self, "Prediction", "Invalid class index")
 
     def qimageToPil(self, qimage):
         """Convert QImage to PIL Image."""
@@ -137,3 +157,17 @@ class MainWindow(QMainWindow):
         image = np.frombuffer(image_data, dtype=np.uint8).reshape((height, width, 4))
         image_pil = Image.fromarray(image)
         return image_pil
+
+    def pilToQImage(self, pil_image):
+        """Convert PIL Image to QImage."""
+        if pil_image.mode == "RGB":
+            r, g, b = pil_image.split()
+            pil_image = Image.merge("RGB", (r, g, b))
+        elif pil_image.mode == "L":
+            pil_image = pil_image.convert("RGBA")
+
+        data = pil_image.tobytes("raw", "RGBA")
+        qimage = QImage(
+            data, pil_image.size[0], pil_image.size[1], QImage.Format_RGBA8888
+        )
+        return qimage
