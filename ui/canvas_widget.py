@@ -1,8 +1,8 @@
 from PyQt5.QtGui import QPainter, QImage, QPen, QColor
 from PyQt5.QtCore import Qt, QPoint, QRect, QSize
 from PyQt5.QtWidgets import QWidget
-from utils.bounding_box import calculate_symbol_bounding_box_with_padding
 from utils.constants import DEFAULT_SYMBOL_COLOR, DEFAULT_PADDING, DEFAULT_PEN_WIDTH
+from utils.symbol_segmentation_utils import find_all_symbols_bounding_boxes
 
 
 class CanvasWidget(QWidget):
@@ -13,7 +13,7 @@ class CanvasWidget(QWidget):
     def initializeCanvasWidget(self, class_names):
         """Initialize the canvas widget."""
         self.class_names = class_names
-        self.bounding_box = None
+        self.bounding_boxes = []
         self.symbol_color = DEFAULT_SYMBOL_COLOR  # Default symbol color
         self.padding = DEFAULT_PADDING  # Default padding
         self.setupDrawingParameters()
@@ -31,18 +31,19 @@ class CanvasWidget(QWidget):
         self.redo_stack = []
 
     def paintEvent(self, event):
-        """Handle paint event to draw the canvas and bounding box."""
+        """Handle paint event to draw the canvas and bounding boxes."""
         canvas_painter = QPainter(self)
         canvas_painter.drawImage(self.rect(), self.image, self.image.rect())
-        if self.bounding_box:
-            self.drawBoundingBox(canvas_painter)
+        if self.bounding_boxes:
+            self.drawBoundingBoxes(canvas_painter)
 
-    def drawBoundingBox(self, painter):
-        """Draw the bounding box on the canvas."""
+    def drawBoundingBoxes(self, painter):
+        """Draw bounding boxes on the canvas."""
         pen = QPen(Qt.red, 2, Qt.SolidLine)
         painter.setPen(pen)
-        x_min, y_min, x_max, y_max = self.bounding_box
-        painter.drawRect(x_min, y_min, x_max - x_min, y_max - y_min)
+        for box in self.bounding_boxes:
+            x_min, y_min, x_max, y_max = box
+            painter.drawRect(x_min, y_min, x_max - x_min, y_max - y_min)
 
     def resizeEvent(self, event):
         """Handle resize event to adjust the image size."""
@@ -70,7 +71,7 @@ class CanvasWidget(QWidget):
             self.drawLineTo(event.pos())
             self.drawing = False
             self.saveCanvasSnapshot()
-            self.updateBoundingBox()
+            self.updateBoundingBoxes()
 
     def drawLineTo(self, end_point):
         """Draw a line from the last point to the current end point."""
@@ -91,7 +92,7 @@ class CanvasWidget(QWidget):
     def clearCanvas(self):
         """Clear the canvas."""
         self.image.fill(Qt.white)
-        self.bounding_box = None
+        self.bounding_boxes = []
         self.update()
 
     def resizeImage(self, image, new_size):
@@ -119,29 +120,36 @@ class CanvasWidget(QWidget):
             last_change = self.undo_stack.pop()
             self.redo_stack.append(self.image.copy())
             self.image = last_change
-            self.updateBoundingBox()
+            self.updateBoundingBoxes()
             self.update()
 
     def redoDrawing(self):
         """Redo the last undone drawing action."""
         if len(self.redo_stack) > 0:
-            last_change = self.redo_stack.pop()
+            next_change = self.redo_stack.pop()
             self.undo_stack.append(self.image.copy())
-            self.image = last_change
-            self.updateBoundingBox()
+            self.image = next_change
+            self.updateBoundingBoxes()
             self.update()
 
     def saveCanvasSnapshot(self):
-        """Save the current state of the canvas."""
+        """Save a snapshot of the current canvas state for undo/redo."""
         self.undo_stack.append(self.image.copy())
-        self.redo_stack = []
+        self.redo_stack.clear()
+
+    def updateBoundingBoxes(self):
+        """Update bounding boxes for the current drawing."""
+        self.bounding_boxes = find_all_symbols_bounding_boxes(
+            self.image,
+            (
+                self.symbol_color.red(),
+                self.symbol_color.green(),
+                self.symbol_color.blue(),
+            ),
+            self.padding,
+        )
+        self.update()
 
     def getDrawing(self):
         """Get the current drawing as a QImage."""
         return self.image
-
-    def updateBoundingBox(self):
-        """Update the bounding box of the symbol on the canvas."""
-        self.bounding_box = calculate_symbol_bounding_box_with_padding(
-            self.image, self.symbol_color.getRgb()[:3], self.padding
-        )

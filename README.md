@@ -25,16 +25,14 @@ Math Vision is an advanced application that utilizes computer vision techniques 
 
 ## Features
 
-1. `Drawing Functionality`: Users can draw on the canvas with various brush sizes and utilize undo/redo actions, along with a clear button for erasing all content.
-2. `Data Processing and Preparation`:
+1. `Data Processing and Preparation`:
    - The dataset used is the Kaggle "Handwritten Math Symbols" dataset, which consists of 100,000+ 45x45 pixel JPEG files. These files contain English alphanumeric symbols, math operators, set operators, and basic predefined math functions.
    - The application loads, normalizes and splits images into training, development, and test sets. Preprocessed data is saved to a compressed .npz file for training or fine-tuning a CNN model.
-3. `Transfer Learning with VGG16`: Model training leverages transfer learning with VGG16, a convolutional neural network model pre-trained on ImageNet. The model is fine-tuned using the pre-processed dataset to recognize mathematical symbols and expressions. Trained model weights and the entire model are saved in the h5 format for future use.
+2. `Transfer Learning with VGG16`: Model training leverages transfer learning with VGG16, a convolutional neural network model pre-trained on ImageNet. The model is fine-tuned using the pre-processed dataset to recognize mathematical symbols and expressions. Trained model weights and the entire model are saved in the h5 format for future use.
+3. `Drawing Functionality`: Users can draw on the canvas with various brush sizes and utilize undo/redo actions, along with a clear button for erasing all content.
 4. `Fast Prediction`: The application swiftly predicts the corresponding math symbols by processing the drawn handwriting on the canvas through the fine-tuned CNN. The accuracy of each prediction is displayed with colored text: green for predictions with accuracy above 90%, yellow for accuracy above 80%, and red for accuracy above 60%.
-5. `Dynamic Bounding Box`: The canvas dynamically draws a bounding box around the drawn symbol with padding, enhancing the visual feedback for users.
-6. `User-friendly Interface`: The GUI is meticulously crafted to be intuitive and user-friendly, featuring clear button labels, a well-organized layout, and intuitive navigation, providing easy interaction with the application's various features.
-7. `Modular and Extensible`: The codebase is structured in a modular way, allowing for easy extension and integration of new features. New functionalities can be added without significant modifications to existing code.
-8. `Well-documented Code`: The codebase is thoroughly documented, with detailed comments explaining the functionality of each module, method, and class. This makes it easier for developers to understand and maintain the code.
+5. `Dynamic Bounding Box`: The canvas dynamically draws bounding boxes around the drawn symbols with padding in real-time, supporting multiple bounding boxes in a single canvas, enhancing the visual feedback for users.
+6. `Recognition of Multiple Symbols`: The model recognizes and classifies multiple handwritten symbols captured in a single image, allowing users to input complex mathematical expressions in one go.
 
 ## Project Structure
 
@@ -60,13 +58,15 @@ math-notation-recognition-app/
 │   │       └── stylesheet.qss         # Stylesheet file for UI styling.
 │   │
 │   ├── canvas_widget.py               # Widget for drawing on the canvas.
-│   └── main_window.py                 # Main application window.
+│   ├── main_window.py                 # Main application window.
+│   └── prediction_result_widget.py    # Widget for displaying prediction results.
 │
 ├── utils/
 │   ├── bounding_box.py                # Utility functions for calculating bounding boxes.
 │   ├── data_processing.py             # Module for loading, preprocessing, and splitting image data.
 │   ├── constants.py                   # File for storing constant values.
-│   └── image_processing_utils.py      # Utility functions for image processing.
+│   ├── image_processing_utils.py      # Utility functions for image processing.
+│   └── symbol_segmentation_utils.py   # Utility functions for symbol segmentation.
 │
 ├── main.py                            # Main script file responsible for initializing the application and setting up the main window.
 ├── .gitignore                         # Specifies which files and directories should be ignored by Git version control.
@@ -102,7 +102,7 @@ math-notation-recognition-app/
    ```
    pip install -r requirements.txt
    ```
-4. \*\*Run the program:
+4. Run the program:
    ```
    python main.py
    ```
@@ -111,7 +111,6 @@ math-notation-recognition-app/
 
 - `Real-time Prediction`: Implement real-time prediction capabilities to classify symbols as they are drawn on the canvas. This enhancement will provide immediate feedback to users and improve the interactive experience.
 - `Camera Support`: Integrate camera support to enable users to capture handwritten math symbols directly from a webcam or camera-equipped device. This feature will expand the application's usability and facilitate real-time input.
-- `Recognition of Multiple Symbols`: Enhance the model to recognize and classify multiple handwritten symbols captured in a single image. This improvement will enable users to input complex mathematical expressions in one go.
 - `Integration with Additional Datasets`: Incorporate additional datasets containing handwritten math symbols to further train and validate the model. This step will improve the model's accuracy and robustness across a wider range of handwritten styles and symbols.
 
 ## License

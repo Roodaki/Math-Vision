@@ -9,13 +9,12 @@ from PyQt5.QtWidgets import (
     QInputDialog,
     QHBoxLayout,
     QMessageBox,
-    QLabel,
 )
-from PyQt5.QtCore import Qt, QFile
-from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtCore import QFile
 from ui.canvas_widget import CanvasWidget
+from ui.prediction_result_widget import PredictionResultWidget
 from utils.data_processing import preprocess_single_image
-from utils.image_processing_utils import crop_bounding_box_from_image
+from utils.bounding_box import crop_bounding_box_from_image
 
 
 class MainWindow(QMainWindow):
@@ -86,77 +85,37 @@ class MainWindow(QMainWindow):
         drawing_image = self.canvas.getDrawing()
 
         if drawing_image is not None:
-            bounding_box_coords = self.canvas.bounding_box
-            if bounding_box_coords:
-                cropped_image = crop_bounding_box_from_image(
-                    drawing_image, bounding_box_coords
-                )
-                resized_image = cropped_image.resize((45, 45))
-                preprocessed_image = preprocess_single_image(resized_image)
+            bounding_boxes = self.canvas.bounding_boxes
+            if bounding_boxes:
+                self.prediction_widget = PredictionResultWidget()
+                self.prediction_widget.backClicked.connect(
+                    self.showCanvasWidget
+                )  # Connect the back button signal
+                self.layout.addWidget(self.prediction_widget)
+                for box in bounding_boxes:
+                    cropped_image = crop_bounding_box_from_image(drawing_image, box)
+                    resized_image = cropped_image.resize((45, 45))
+                    preprocessed_image = preprocess_single_image(resized_image)
 
-                trained_model_path = "models/saved_models/trained_model.h5"
-                model = load_model(trained_model_path)
-                prediction = model.predict(preprocessed_image)
-                predicted_class_index = np.argmax(prediction)
+                    trained_model_path = "models/saved_models/trained_model.h5"
+                    model = load_model(trained_model_path)
+                    prediction = model.predict(preprocessed_image)
+                    predicted_class_index = np.argmax(prediction)
 
-                if predicted_class_index < len(self.class_names):
-                    predicted_class_name = self.class_names[predicted_class_index]
-                    prediction_confidence = prediction[0, predicted_class_index] * 100
-                    self.displayPredictionResult(
-                        predicted_class_name, prediction_confidence, cropped_image
-                    )
-                else:
-                    QMessageBox.warning(self, "Prediction", "Invalid class index")
+                    if predicted_class_index < len(self.class_names):
+                        predicted_class_name = self.class_names[predicted_class_index]
+                        prediction_confidence = (
+                            prediction[0, predicted_class_index] * 100
+                        )
+                        self.prediction_widget.addPrediction(
+                            predicted_class_name, prediction_confidence, cropped_image
+                        )
+                    else:
+                        QMessageBox.warning(self, "Prediction", "Invalid class index")
             else:
                 QMessageBox.warning(self, "Prediction", "No bounding box found")
 
-    def displayPredictionResult(self, class_name, confidence, cropped_image):
-        """Display the prediction result in a message box."""
-        confidence_color = self.getConfidenceColor(confidence)
-        message = f"<p><b>Predicted Class:</b> {class_name}</p>"
-        message += f"<p><b>Accuracy:</b> <font color='{confidence_color}'>{confidence:.2f}%</font></p>"
-
-        cropped_image_qt = self.convertPILImageToQImage(cropped_image)
-        pixmap = QPixmap.fromImage(cropped_image_qt)
-        image_label = QLabel()
-        image_label.setPixmap(pixmap)
-        image_label.setAlignment(Qt.AlignCenter)
-
-        msg_box = QMessageBox()
-        msg_box.setWindowTitle("Prediction")
-        msg_box.setTextFormat(Qt.RichText)
-        msg_box.setText(message)
-        msg_box.layout().addWidget(image_label, 0, 0, Qt.AlignTop | Qt.AlignHCenter)
-        msg_box.exec_()
-
-    def getConfidenceColor(self, confidence):
-        """Return the color based on confidence level."""
-        if confidence >= 90:
-            return "green"
-        elif confidence >= 80:
-            return "yellow"
-        elif confidence >= 60:
-            return "red"
-        else:
-            return "gray"
-
-    def convertQImageToPILImage(self, qimage):
-        """Convert a QImage to a PIL Image."""
-        width, height = qimage.width(), qimage.height()
-        image_data = qimage.bits().asstring(width * height * 4)
-        image_array = np.frombuffer(image_data, dtype=np.uint8).reshape(
-            (height, width, 4)
-        )
-        pil_image = Image.fromarray(image_array)
-        return pil_image
-
-    def convertPILImageToQImage(self, pil_image):
-        """Convert a PIL Image to a QImage."""
-        if pil_image.mode == "RGB":
-            pil_image = pil_image.convert("RGBA")
-
-        image_data = pil_image.tobytes("raw", "RGBA")
-        qimage = QImage(
-            image_data, pil_image.size[0], pil_image.size[1], QImage.Format_RGBA8888
-        )
-        return qimage
+    def showCanvasWidget(self):
+        """Show the canvas widget and hide the prediction widget."""
+        self.prediction_widget.setParent(None)  # Remove prediction widget
+        self.layout.addWidget(self.canvas)  # Re-add canvas widget

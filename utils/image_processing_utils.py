@@ -3,23 +3,6 @@ import numpy as np
 from PIL import Image
 
 
-def crop_bounding_box_from_image(image_qt: QImage, bounding_box_coords: tuple) -> Image:
-    """
-    Crop the specified bounding box from the provided QImage.
-
-    Args:
-        image_qt (QImage): The QImage from which to crop.
-        bounding_box_coords (tuple): Coordinates of the bounding box (x_min, y_min, x_max, y_max).
-
-    Returns:
-        Image: Cropped image as a PIL Image.
-    """
-    x_min, y_min, x_max, y_max = bounding_box_coords
-    pil_image = convert_qimage_to_pil(image_qt)
-    cropped_image = pil_image.crop((x_min, y_min, x_max, y_max))
-    return cropped_image
-
-
 def convert_qimage_to_pil(qimage: QImage) -> Image:
     """
     Convert a QImage to a PIL Image.
@@ -36,19 +19,47 @@ def convert_qimage_to_pil(qimage: QImage) -> Image:
     return Image.fromarray(numpy_array)
 
 
-def convert_qimage_to_numpy_array(qimage: QImage) -> np.ndarray:
+def convert_pil_to_qimage(pil_image: Image) -> QImage:
     """
-    Convert a QImage to a numpy array, excluding the alpha channel.
+    Convert a PIL Image to a QImage.
 
     Args:
-        qimage (QImage): The QImage to convert.
+        pil_image (Image): The PIL Image to convert.
 
     Returns:
-        np.ndarray: Numpy array representation of the QImage, without the alpha channel.
+        QImage: Converted QImage.
     """
-    qimage_rgb = qimage.convertToFormat(QImage.Format_RGB32)
-    width, height = qimage_rgb.width(), qimage_rgb.height()
-    image_ptr = qimage_rgb.bits()
-    image_ptr.setsize(qimage_rgb.byteCount())
-    numpy_array = np.array(image_ptr).reshape(height, width, 4)
+    if pil_image.mode == "RGB":
+        pil_image = pil_image.convert("RGBA")
+
+    image_data = pil_image.tobytes("raw", "RGBA")
+    qimage = QImage(
+        image_data, pil_image.size[0], pil_image.size[1], QImage.Format_RGBA8888
+    )
+    return qimage
+
+
+def convert_qimage_to_numpy_array(input_qimage: QImage) -> np.ndarray:
+    """
+    Convert a QImage to a numpy array.
+
+    Args:
+        input_qimage (QImage): Input QImage to convert.
+
+    Returns:
+        np.ndarray: Converted numpy array representing the QImage.
+    """
+    # Convert the QImage to RGB32 format for consistency
+    rgb32_qimage = input_qimage.convertToFormat(QImage.Format_RGB32)
+
+    # Extract width, height, and byte array from the QImage
+    image_width = rgb32_qimage.width()
+    image_height = rgb32_qimage.height()
+    byte_array = rgb32_qimage.bits()
+    byte_array.setsize(rgb32_qimage.byteCount())
+
+    # Convert byte array to a numpy array and reshape it to (height, width, 4)
+    numpy_array = np.array(byte_array).reshape(image_height, image_width, 4)
+
+    # Return the numpy array without the alpha channel (last channel)
     return numpy_array[:, :, :3]

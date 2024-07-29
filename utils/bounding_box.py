@@ -1,5 +1,10 @@
 import numpy as np
 from PyQt5.QtGui import QImage
+from utils.image_processing_utils import (
+    convert_qimage_to_numpy_array,
+    convert_qimage_to_pil,
+)
+from PIL import Image
 
 
 def calculate_symbol_bounding_box_with_padding(
@@ -41,27 +46,39 @@ def calculate_symbol_bounding_box_with_padding(
     return x_min, y_min, x_max, y_max
 
 
-def convert_qimage_to_numpy_array(input_qimage: QImage) -> np.ndarray:
+def crop_bounding_box_from_image(image_qt: QImage, bounding_box_coords: tuple) -> Image:
     """
-    Convert a QImage to a numpy array.
+    Crop the specified bounding box from the provided QImage.
 
     Args:
-        input_qimage (QImage): Input QImage to convert.
+        image_qt (QImage): The QImage from which to crop.
+        bounding_box_coords (tuple): Coordinates of the bounding box (x_min, y_min, x_max, y_max).
 
     Returns:
-        np.ndarray: Converted numpy array representing the QImage.
+        Image: Cropped image as a PIL Image.
     """
-    # Convert the QImage to RGB32 format for consistency
-    rgb32_qimage = input_qimage.convertToFormat(QImage.Format_RGB32)
+    x_min, y_min, x_max, y_max = bounding_box_coords
+    pil_image = convert_qimage_to_pil(image_qt)
+    cropped_image = pil_image.crop((x_min, y_min, x_max, y_max))
+    return cropped_image
 
-    # Extract width, height, and byte array from the QImage
-    image_width = rgb32_qimage.width()
-    image_height = rgb32_qimage.height()
-    byte_array = rgb32_qimage.bits()
-    byte_array.setsize(rgb32_qimage.byteCount())
 
-    # Convert byte array to a numpy array and reshape it to (height, width, 4)
-    numpy_array = np.array(byte_array).reshape(image_height, image_width, 4)
+def crop_multiple_bounding_boxes_from_image(
+    image_qt: QImage, bounding_boxes: list
+) -> list:
+    """
+    Crop multiple bounding boxes from the provided QImage.
 
-    # Return the numpy array without the alpha channel (last channel)
-    return numpy_array[:, :, :3]
+    Args:
+        image_qt (QImage): The QImage from which to crop.
+        bounding_boxes (list): List of bounding box coordinates [(x_min, y_min, x_max, y_max), ...].
+
+    Returns:
+        list: List of cropped images as PIL Images.
+    """
+    pil_image = convert_qimage_to_pil(image_qt)
+    cropped_images = [
+        pil_image.crop((x_min, y_min, x_max, y_max))
+        for (x_min, y_min, x_max, y_max) in bounding_boxes
+    ]
+    return cropped_images
