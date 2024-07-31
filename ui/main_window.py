@@ -50,13 +50,17 @@ class MainWindow(QMainWindow):
 
     def initializeButtons(self):
         """Initialize the buttons for canvas interaction."""
-        button_layout = QHBoxLayout()
-        self.addButtonToLayout("Clear", self.canvas.clearCanvas, button_layout)
-        self.addButtonToLayout("Brush Size", self.showBrushSizeDialog, button_layout)
-        self.addButtonToLayout("Undo", self.canvas.undoDrawing, button_layout)
-        self.addButtonToLayout("Redo", self.canvas.redoDrawing, button_layout)
-        self.addButtonToLayout("Predict", self.predictDrawingFromCanvas, button_layout)
-        self.layout.addLayout(button_layout)
+        self.button_layout = QHBoxLayout()
+        self.addButtonToLayout("Clear", self.canvas.clearCanvas, self.button_layout)
+        self.addButtonToLayout(
+            "Brush Size", self.showBrushSizeDialog, self.button_layout
+        )
+        self.addButtonToLayout("Undo", self.canvas.undoDrawing, self.button_layout)
+        self.addButtonToLayout("Redo", self.canvas.redoDrawing, self.button_layout)
+        self.addButtonToLayout(
+            "Predict", self.predictDrawingFromCanvas, self.button_layout
+        )
+        self.layout.addLayout(self.button_layout)
 
     def addButtonToLayout(self, button_text, on_click_function, layout):
         """Add a button with specified text and click function to the given layout."""
@@ -87,11 +91,15 @@ class MainWindow(QMainWindow):
         if drawing_image is not None:
             bounding_boxes = self.canvas.bounding_boxes
             if bounding_boxes:
+                self.canvas.hide()  # Hide the canvas
+                self.button_layout.setParent(None)  # Remove the button layout
+
                 self.prediction_widget = PredictionResultWidget()
                 self.prediction_widget.backClicked.connect(
                     self.showCanvasWidget
                 )  # Connect the back button signal
                 self.layout.addWidget(self.prediction_widget)
+
                 for box in bounding_boxes:
                     cropped_image = crop_bounding_box_from_image(drawing_image, box)
                     resized_image = cropped_image.resize((45, 45))
@@ -119,3 +127,5 @@ class MainWindow(QMainWindow):
         """Show the canvas widget and hide the prediction widget."""
         self.prediction_widget.setParent(None)  # Remove prediction widget
         self.layout.addWidget(self.canvas)  # Re-add canvas widget
+        self.layout.addLayout(self.button_layout)  # Re-add button layout
+        self.canvas.show()  # Show the canvas
